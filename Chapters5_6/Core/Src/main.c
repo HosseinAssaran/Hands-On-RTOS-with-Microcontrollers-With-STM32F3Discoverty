@@ -421,8 +421,11 @@ void Task2( void* argument )
 
 void Task3( void* argument )
 {
+	uint32_t itr = 0 ;
+	volatile uint32_t __attribute__((unused)) remainder = 0;
 	while(1)
 	{
+		remainder = ++itr % 4;
 		lookBusy();
 
 		SEGGER_SYSVIEW_PrintfHost("task3\n");
