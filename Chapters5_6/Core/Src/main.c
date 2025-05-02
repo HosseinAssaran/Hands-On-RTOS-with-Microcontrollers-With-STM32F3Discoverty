@@ -22,7 +22,10 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <SEGGER_SYSVIEW.h>
+#include <stdio.h>
+#include <task.h>
+#include <F3DISCOVERY_GPIO.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -32,7 +35,10 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+void Task1(void *argument);
+void Task2(void *argument);
+void Task3(void *argument);
+void lookBusy( void );
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -83,7 +89,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+	const static uint32_t stackSize = 128;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -92,7 +98,6 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -108,7 +113,6 @@ int main(void)
   MX_SPI1_Init();
   MX_USB_PCD_Init();
   /* USER CODE BEGIN 2 */
-
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -132,10 +136,21 @@ int main(void)
 
   /* Create the thread(s) */
   /* creation of defaultTask */
-  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  //defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
-  /* add threads, ... */
+	SEGGER_SYSVIEW_Conf();
+	if (xTaskCreate(Task1, "task1", stackSize, NULL, tskIDLE_PRIORITY + 2, NULL) == pdPASS)
+	{
+		if (xTaskCreate(Task2, "task2", stackSize, NULL, tskIDLE_PRIORITY + 1, NULL) == pdPASS)
+		{
+			if (xTaskCreate(Task3, "task3", stackSize, NULL, tskIDLE_PRIORITY + 1, NULL) == pdPASS)
+			{
+				//start the scheduler - shouldn't return unless there's a problem
+				vTaskStartScheduler();
+			}
+		}
+	}
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
@@ -380,7 +395,53 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void Task1(void *argument)
+{
+  while(1)
+  {
+	  SEGGER_SYSVIEW_PrintfHost("hey there!\n");
+	  GreenLed.On();
+	  vTaskDelay(105/ portTICK_PERIOD_MS);
+	  GreenLed.Off();
+	  vTaskDelay(100/ portTICK_PERIOD_MS);
+  }
+}
 
+void Task2( void* argument )
+{
+	while(1)
+	{
+		SEGGER_SYSVIEW_PrintfHost("task 2 says 'Hi!'\n");
+		BlueLed.On();
+		vTaskDelay(200 / portTICK_PERIOD_MS);
+		BlueLed.Off();
+		vTaskDelay(200 / portTICK_PERIOD_MS);
+	}
+}
+
+void Task3( void* argument )
+{
+	while(1)
+	{
+		lookBusy();
+
+		SEGGER_SYSVIEW_PrintfHost("task3\n");
+		RedLed.On();
+		vTaskDelay(500/ portTICK_PERIOD_MS);
+		RedLed.Off();
+		vTaskDelay(500/ portTICK_PERIOD_MS);
+	}
+}
+
+void lookBusy( void )
+{
+	volatile uint32_t __attribute__((unused)) dontCare = 0;
+	for(int i = 0; i < 50E3; i++)
+	{
+		dontCare = i % 4;
+	}
+	SEGGER_SYSVIEW_PrintfHost("looking busy\n");
+}
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
