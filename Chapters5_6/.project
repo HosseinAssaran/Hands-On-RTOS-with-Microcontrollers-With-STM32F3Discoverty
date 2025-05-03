@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>freeRTOS_F3Discovery</name>
+	<name>Chapters5_6</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -31,9 +31,9 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>Core/BSP</name>
+			<name>BSP</name>
 			<type>2</type>
-			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/BSP</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/BSP</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>
