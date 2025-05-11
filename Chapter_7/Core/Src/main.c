@@ -151,6 +151,8 @@ int main(void)
   //defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
+	SEGGER_SYSVIEW_Init(HAL_RCC_GetHCLKFreq(), HAL_RCC_GetHCLKFreq(), 0, 0);
+	SEGGER_SYSVIEW_Start();
 	//using an inlined if statement with an infinite while loop to stop in case
 	//the task wasn't created successfully
 	if (xTaskCreate(GreenTask, "GreenTask", STACK_SIZE, NULL, tskIDLE_PRIORITY + 2, NULL) != pdPASS){ while(1); }
