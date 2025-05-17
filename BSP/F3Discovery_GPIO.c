@@ -3,8 +3,7 @@
  * Nucleo-F767ZI
  */
 
-#include "F3DISCOVERY_GPIO.h"
-
+#include <F3Discovery_GPIO.h>
 #include <stm32f3xx_hal.h>
 
 void GreenOn ( void ) {HAL_GPIO_WritePin(GPIOE, GPIO_PIN_15, GPIO_PIN_SET);}

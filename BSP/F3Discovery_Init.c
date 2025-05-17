@@ -1,63 +1,14 @@
-/* USER CODE BEGIN Header */
-/**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
-/* USER CODE END Header */
-/* Includes ------------------------------------------------------------------*/
-#include "main.h"
-#include "cmsis_os.h"
+/*
+ * F3Discovery_Init.c
+ *
+ *  Created on: May 17, 2025
+ *      Author: Hossein Assaran
+ */
 
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
+#include <FreeRTOS.h>
+#include <main.h>
+#include <F3Discovery_Init.h>
 #include <SEGGER_SYSVIEW.h>
-#include <stdio.h>
-#include <task.h>
-#include <F3DISCOVERY_GPIO.h>
-/* USER CODE END Includes */
-
-/* Private typedef -----------------------------------------------------------*/
-/* USER CODE BEGIN PTD */
-
-/* USER CODE END PTD */
-
-/* Private define ------------------------------------------------------------*/
-/* USER CODE BEGIN PD */
-void GreenTask(void *argument);
-void BlueTask(void *argument);
-void RedTask(void *argument);
-void lookBusy( void );
-
-//the address of Task2Handle is passed to xTaskCreate.
-//this global variable will be used by Task3 to delete BlueTask.
-TaskHandle_t blueTaskHandle;
-
-// some common variables to use for each task
-// 128 * 4 = 512 bytes
-//(recommended min stack size per task)
-#define STACK_SIZE 128
-
-//define stack and task control block (TCB) for the red task
-static StackType_t RedTaskStack[STACK_SIZE];
-static StaticTask_t RedTaskTCB;
-/* USER CODE END PD */
-
-/* Private macro -------------------------------------------------------------*/
-/* USER CODE BEGIN PM */
-
-/* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
@@ -66,128 +17,21 @@ SPI_HandleTypeDef hspi1;
 
 PCD_HandleTypeDef hpcd_USB_FS;
 
-/* Definitions for defaultTask */
-osThreadId_t defaultTaskHandle;
-const osThreadAttr_t defaultTask_attributes = {
-  .name = "defaultTask",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
-};
-/* USER CODE BEGIN PV */
-
-/* USER CODE END PV */
-
-/* Private function prototypes -----------------------------------------------*/
+/* Private Declaration ---------------------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_USB_PCD_Init(void);
-void StartDefaultTask(void *argument);
 
-/* USER CODE BEGIN PFP */
 
-/* USER CODE END PFP */
-
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
-
-/* USER CODE END 0 */
-
-/**
-  * @brief  The application entry point.
-  * @retval int
-  */
-int main(void)
-{
-
-  /* USER CODE BEGIN 1 */
-  /* USER CODE END 1 */
-
-  /* MCU Configuration--------------------------------------------------------*/
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+void HWInit( void ) {
   HAL_Init();
-
-  /* USER CODE BEGIN Init */
-  /* USER CODE END Init */
-
-  /* Configure the system clock */
   SystemClock_Config();
-
-  /* USER CODE BEGIN SysInit */
-
-  /* USER CODE END SysInit */
-
-  /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_I2C1_Init();
   MX_SPI1_Init();
   MX_USB_PCD_Init();
-  /* USER CODE BEGIN 2 */
-  /* USER CODE END 2 */
-
-  /* Init scheduler */
-  osKernelInitialize();
-
-  /* USER CODE BEGIN RTOS_MUTEX */
-  /* add mutexes, ... */
-  /* USER CODE END RTOS_MUTEX */
-
-  /* USER CODE BEGIN RTOS_SEMAPHORES */
-  /* add semaphores, ... */
-  /* USER CODE END RTOS_SEMAPHORES */
-
-  /* USER CODE BEGIN RTOS_TIMERS */
-  /* start timers, add new ones, ... */
-  /* USER CODE END RTOS_TIMERS */
-
-  /* USER CODE BEGIN RTOS_QUEUES */
-  /* add queues, ... */
-  /* USER CODE END RTOS_QUEUES */
-
-  /* Create the thread(s) */
-  /* creation of defaultTask */
-  //defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
-
-  /* USER CODE BEGIN RTOS_THREADS */
-	SEGGER_SYSVIEW_Init(HAL_RCC_GetHCLKFreq(), HAL_RCC_GetHCLKFreq(), 0, 0);
-	SEGGER_SYSVIEW_Start();
-	//using an inlined if statement with an infinite while loop to stop in case
-	//the task wasn't created successfully
-	if (xTaskCreate(GreenTask, "GreenTask", STACK_SIZE, NULL, tskIDLE_PRIORITY + 2, NULL) != pdPASS){ while(1); }
-
-	//using an assert to ensure proper task creation
-	assert_param(xTaskCreate(BlueTask, "BlueTask", STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &blueTaskHandle) == pdPASS);
-
-	//xTaskCreateStatic returns task hanlde
-	//always passes since memory was statically allocated
-	xTaskCreateStatic(	RedTask, "RedTask", STACK_SIZE, NULL,
-						tskIDLE_PRIORITY + 1,
-						RedTaskStack, &RedTaskTCB);
-
-	//start the scheduler - shouldn't return unless there's a problem
-	vTaskStartScheduler();
-  /* USER CODE END RTOS_THREADS */
-
-  /* USER CODE BEGIN RTOS_EVENTS */
-  /* add events, ... */
-  /* USER CODE END RTOS_EVENTS */
-
-  /* Start scheduler */
-  osKernelStart();
-
-  /* We should never get here as control is now taken by the scheduler */
-
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
-  }
-  /* USER CODE END 3 */
 }
 
 /**
@@ -246,13 +90,6 @@ void SystemClock_Config(void)
 static void MX_I2C1_Init(void)
 {
 
-  /* USER CODE BEGIN I2C1_Init 0 */
-
-  /* USER CODE END I2C1_Init 0 */
-
-  /* USER CODE BEGIN I2C1_Init 1 */
-
-  /* USER CODE END I2C1_Init 1 */
   hi2c1.Instance = I2C1;
   hi2c1.Init.Timing = 0x2000090E;
   hi2c1.Init.OwnAddress1 = 0;
@@ -280,9 +117,6 @@ static void MX_I2C1_Init(void)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN I2C1_Init 2 */
-
-  /* USER CODE END I2C1_Init 2 */
 
 }
 
@@ -293,14 +127,6 @@ static void MX_I2C1_Init(void)
   */
 static void MX_SPI1_Init(void)
 {
-
-  /* USER CODE BEGIN SPI1_Init 0 */
-
-  /* USER CODE END SPI1_Init 0 */
-
-  /* USER CODE BEGIN SPI1_Init 1 */
-
-  /* USER CODE END SPI1_Init 1 */
   /* SPI1 parameter configuration*/
   hspi1.Instance = SPI1;
   hspi1.Init.Mode = SPI_MODE_MASTER;
@@ -334,13 +160,6 @@ static void MX_SPI1_Init(void)
 static void MX_USB_PCD_Init(void)
 {
 
-  /* USER CODE BEGIN USB_Init 0 */
-
-  /* USER CODE END USB_Init 0 */
-
-  /* USER CODE BEGIN USB_Init 1 */
-
-  /* USER CODE END USB_Init 1 */
   hpcd_USB_FS.Instance = USB;
   hpcd_USB_FS.Init.dev_endpoints = 8;
   hpcd_USB_FS.Init.speed = PCD_SPEED_FULL;
@@ -351,9 +170,6 @@ static void MX_USB_PCD_Init(void)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN USB_Init 2 */
-
-  /* USER CODE END USB_Init 2 */
 
 }
 
@@ -405,93 +221,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
-
-  /* USER CODE BEGIN MX_GPIO_Init_2 */
-
-  /* USER CODE END MX_GPIO_Init_2 */
 }
 
-/* USER CODE BEGIN 4 */
-void GreenTask(void *argument)
-{
-	SEGGER_SYSVIEW_PrintfHost("Task1 running \
-							   while Green LED is on\n");
-	GreenLed.On();
-	vTaskDelay(1500/ portTICK_PERIOD_MS);
-	GreenLed.Off();
-
-	//a task can delete itself by passing NULL to vTaskDelete
-	vTaskDelete(NULL);
-
-	//task never get's here
-	GreenLed.On();
-}
-
-void BlueTask( void* argument )
-{
-	while(1)
-	{
-		SEGGER_SYSVIEW_PrintfHost("BlueTaskRunning\n");
-		BlueLed.On();
-		vTaskDelay(200 / portTICK_PERIOD_MS);
-		BlueLed.Off();
-		vTaskDelay(200 / portTICK_PERIOD_MS);
-	}
-}
-
-void RedTask( void* argument )
-{
-	uint8_t firstRun = 1;
-
-	while(1)
-	{
-		lookBusy();
-
-		SEGGER_SYSVIEW_PrintfHost("RedTaskRunning\n");
-		RedLed.On();
-		vTaskDelay(500/ portTICK_PERIOD_MS);
-		RedLed.Off();
-		vTaskDelay(500/ portTICK_PERIOD_MS);
-
-		if(firstRun == 1)
-		{
-			//tasks can delete one-another by passing the desired
-			//TaskHandle_t to vTaskDelete
-			vTaskDelete(blueTaskHandle);
-			firstRun = 0;
-		}
-	}
-}
-
-void lookBusy( void )
-{
-	volatile uint32_t dontCare = 0;
-	for(int i = 0; i < 50E3; i++)
-	{
-		dontCare = i % 4;
-	}
-	SEGGER_SYSVIEW_PrintfHost("looking busy %d\n", dontCare);
-}
-
-/* USER CODE END 4 */
-
-/* USER CODE BEGIN Header_StartDefaultTask */
-/**
-  * @brief  Function implementing the defaultTask thread.
-  * @param  argument: Not used
-  * @retval None
-  */
-/* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument)
-{
-  /* USER CODE BEGIN 5 */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END 5 */
-}
 
 /**
   * @brief  Period elapsed callback in non blocking mode
@@ -503,16 +234,12 @@ void StartDefaultTask(void *argument)
   */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-  /* USER CODE BEGIN Callback 0 */
 
-  /* USER CODE END Callback 0 */
   if (htim->Instance == TIM6)
   {
     HAL_IncTick();
   }
-  /* USER CODE BEGIN Callback 1 */
 
-  /* USER CODE END Callback 1 */
 }
 
 /**
