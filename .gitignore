@@ -2,3 +2,13 @@
 **/Debug/**
 **/Release/**
 **/build/**
+makefile
+*.elf
+*.o
+*.d
+*.map
+*.list
+*.mk
+*.su
+*.launch
+*.jdebug*
