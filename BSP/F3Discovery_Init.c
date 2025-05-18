@@ -34,6 +34,30 @@ void HWInit( void ) {
   MX_USB_PCD_Init();
 }
 
+// Simple Linear Congruential Generator (LCG) state
+static uint32_t lcg_seed = 0x12345678;  // You can seed this better at startup
+
+// Generate next pseudo-random number
+static uint32_t lcg_rand(void)
+{
+    lcg_seed = (lcg_seed * 1664525UL + 1013904223UL);
+    return lcg_seed;
+}
+
+/**
+ * NOTE:this function doesn't guarantee a new number every call
+ * @param Min smallest number to generate
+ * @param Max largest number to generate
+ * @returns a pseudo random number
+ */
+uint8_t StmRand(uint8_t min, uint8_t max)
+{
+    uint32_t rand_val = lcg_rand();
+    uint8_t range = max - min + 1;
+    return (rand_val % range) + min;
+}
+
+
 /**
   * @brief System Clock Configuration
   * @retval None
@@ -222,7 +246,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 }
-
 
 /**
   * @brief  Period elapsed callback in non blocking mode

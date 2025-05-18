@@ -14,6 +14,7 @@
 #endif
 
 void HWInit( void );
+uint8_t StmRand(uint8_t min, uint8_t max);
 
 #ifdef __cplusplus
  }
